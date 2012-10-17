@@ -3,6 +3,10 @@ apply plugin: 'cargo'
 
 version = '1.0.0-SNAPSHOT'
 
+task wrapper(type: Wrapper) {
+  gradleVersion = '1.2'
+}
+
 task initDB << {
   runSqlScript('initDB.sql')
 }
