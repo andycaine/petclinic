@@ -18,12 +18,6 @@
 			p:driverClassName="${jdbc.driverClassName}" p:url="${jdbc.url}"
 			p:username="${jdbc.username}" p:password="${jdbc.password}"/>
 
-	<jdbc:initialize-database data-source="dataSource">
-		<jdbc:script location="${jdbc.initLocation}"/>
-		<jdbc:script location="${jdbc.dataLocation}"/>
-	</jdbc:initialize-database>
-
-
 	<!-- Note: the specific "jpaAdapter" bean sits in adapter context file -->
 	<bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean"
 		p:dataSource-ref="dataSource" p:jpaVendorAdapter-ref="jpaAdapter">

@@ -7,18 +7,25 @@ task wrapper(type: Wrapper) {
   gradleVersion = '1.2'
 }
 
+task dropAndCreateDB << {
+  runSqlScript('dropDB.sql')
+  runSqlScript('initDB.sql')
+}
+
 task initDB << {
   runSqlScript('initDB.sql')
 }
 
-task populateDB(dependsOn: initDB) << {
+task populateDB(dependsOn: dropAndCreateDB) << {
   runSqlScript('populateDB.sql', databaseName)
 }
+
+test.dependsOn populateDB
 
 def runSqlScript(filename, database = "") {
   ant.sql(
     userid: "${dbaUsername}",
-    url: "jdbc:mysql://${databaseHostname}",
+    url: "jdbc:mysql://${databaseHostname}/${database}",
     password: "${dbaPassword}",
     driver: "com.mysql.jdbc.Driver",
     classpath: configurations.runtime.asPath,
