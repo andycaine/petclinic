@@ -3,6 +3,15 @@ apply plugin: 'cargo'
 
 version = '1.0.0-SNAPSHOT'
 
+loadConfig()
+
+def loadConfig() {
+  def environment = System.getProperty("environment") ?: "local"
+  def config = new ConfigSlurper(environment).parse(new File("build-config.groovy").toURL())
+  if (config.isEmpty()) throw new InvalidUserDataException("Invalid environment: ${environment}")
+  ext.config = config
+}
+
 task wrapper(type: Wrapper) {
   gradleVersion = '1.2'
 }
@@ -24,9 +33,9 @@ test.dependsOn populateDB
 
 def runSqlScript(filename, database = "") {
   ant.sql(
-    userid: "${dbaUsername}",
-    url: "jdbc:mysql://${databaseHostname}/${database}",
-    password: "${dbaPassword}",
+    userid: "${config.dba.username}",
+    url: "jdbc:mysql://${config.db.host}/${database}",
+    password: "${config.db.dba.password}",
     driver: "com.mysql.jdbc.Driver",
     classpath: configurations.runtime.asPath,
     src: "src/main/resources/db/mysql/${filename}")
@@ -49,11 +58,16 @@ cargo {
   port = 8080
   context = 'petclinic'
   remote {
-    hostname = "${tomcatHostname}"
-    username = "${tomcatUsername}"
-    password = "${tomcatPassword}"
+    hostname = "${config.tomcat.host}"
+    username = "${config.tomcat.username}"
+    password = "${config.tomcat.password}"
   }
 }
+
+task deploy(dependsOn: populateDB) << {
+  tasks.cargo.execute()
+}
+
 
 repositories {
   mavenCentral()
