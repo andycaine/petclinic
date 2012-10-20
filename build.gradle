@@ -33,7 +33,7 @@ test.dependsOn populateDB
 
 def runSqlScript(filename, database = "") {
   ant.sql(
-    userid: "${config.dba.username}",
+    userid: "${config.db.dba.username}",
     url: "jdbc:mysql://${config.db.host}/${database}",
     password: "${config.db.dba.password}",
     driver: "com.mysql.jdbc.Driver",
@@ -64,9 +64,7 @@ cargo {
   }
 }
 
-task deploy(dependsOn: populateDB) << {
-  tasks.cargo.execute()
-}
+task deploy(dependsOn: [populateDB, cargoRedeployRemote]) << {}
 
 
 repositories {

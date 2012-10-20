@@ -30,7 +30,7 @@ environments {
     db {
       host = "192.168.33.11"
       dba {
-        username = "root"
+        username = "dba"
         password = "password"
       }
 
@@ -49,7 +49,7 @@ environments {
     db {
       host = "192.168.33.12"
       dba {
-        username = "root"
+        username = "dba"
         password = "password"
       }
 
@@ -67,7 +67,7 @@ environments {
     db {
       host = "192.168.33.13"
       dba {
-        username = "root"
+        username = "dba"
         password = "password"
       }
 
