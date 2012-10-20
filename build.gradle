@@ -64,7 +64,9 @@ cargo {
   }
 }
 
-task deploy(dependsOn: [populateDB, cargoRedeployRemote]) << {}
+task deploy(dependsOn: [populateDB]) << {
+  tasks.cargoRedeployRemote.execute()
+}
 
 
 repositories {
