@@ -30,7 +30,7 @@ environments {
     db {
       host = "192.168.33.11"
       dba {
-        username = "root"
+        username = "dba"
         password = "password"
       }
 
