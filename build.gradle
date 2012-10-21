@@ -16,6 +16,10 @@ task wrapper(type: Wrapper) {
   gradleVersion = '1.2'
 }
 
+war {
+  baseName = "petclinic"
+}
+
 task dropAndCreateDB << {
   runSqlScript('dropDB.sql')
   runSqlScript('initDB.sql')
