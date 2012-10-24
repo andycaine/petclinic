@@ -3,7 +3,7 @@ apply plugin: 'cargo'
 
 def buildNumber = System.getProperty("gitCommit")
 if (buildNumber) {
-  buildNumber = buildNumber[0..7]
+  buildNumber = buildNumber[0..6]
 } else {
   buildNumber = "SNAPSHOT"
 }
