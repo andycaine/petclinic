@@ -1,7 +1,12 @@
 apply plugin: 'java'
 apply plugin: 'cargo'
 
-def buildNumber = System.getProperty("gitCommit") ?: "SNAPSHOT"
+def buildNumber = System.getProperty("gitCommit")
+if (buildNumber) {
+  buildNumber = buildNumber[0..7]
+} else {
+  buildNumber = "SNAPSHOT"
+}
 version = "1.0.0-${buildNumber}"
 
 loadConfig()
