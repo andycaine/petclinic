@@ -1,5 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'cargo'
+apply plugin: 'maven'
 
 def buildNumber = System.getProperty("gitCommit")
 if (buildNumber) {
@@ -8,6 +9,19 @@ if (buildNumber) {
   buildNumber = "SNAPSHOT"
 }
 version = "1.0.0-${buildNumber}"
+
+
+uploadArchives {
+  repositories {
+    mavenDeployer {
+      repository(url: "http://192.168.33.10:8081/nexus/content/repositories/staging") {
+        authentication(userName: "deployment", password: "password")
+      }
+      pom.groupId = "org.springframework.samples"
+    }
+  }
+}
+
 
 loadConfig()
 
