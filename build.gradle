@@ -2,6 +2,7 @@ apply plugin: 'java'
 apply plugin: 'cargo'
 apply plugin: 'maven'
 
+
 def buildNumber = System.getProperty("gitCommit")
 if (buildNumber) {
   buildNumber = buildNumber[0..6]
