@@ -3,12 +3,7 @@ apply plugin: 'cargo'
 apply plugin: 'maven'
 
 
-def buildNumber = System.getProperty("gitCommit")
-if (buildNumber) {
-  buildNumber = buildNumber[0..6]
-} else {
-  buildNumber = "SNAPSHOT"
-}
+def buildNumber = System.getProperty("build") ?: "SNAPSHOT"
 version = "1.0.0-${buildNumber}"
 
 
