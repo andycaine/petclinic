@@ -5,19 +5,7 @@ apply plugin: 'maven'
 
 def buildNumber = System.getProperty("build") ?: "SNAPSHOT"
 version = "1.0.0-${buildNumber}"
-
-
-uploadArchives {
-  repositories {
-    mavenDeployer {
-      repository(url: "http://192.168.33.10:8081/nexus/content/repositories/staging") {
-        authentication(userName: "deployment", password: "password")
-      }
-      pom.groupId = "org.springframework.samples"
-    }
-  }
-}
-
+group = "org.springframework.samples"
 
 loadConfig()
 
@@ -28,6 +16,17 @@ def loadConfig() {
   ext.config = config
 }
 
+def repoId = System.getProperty("repository") ?: "staging"
+uploadArchives {
+  repositories {
+    mavenDeployer {
+      repository(url: "http://192.168.33.10:8081/nexus/content/repositories/${repoId}") {
+        authentication(userName: "admin", password: "admin123")
+      }
+    }
+  }
+}
+
 task wrapper(type: Wrapper) {
   gradleVersion = '1.2'
 }
@@ -36,20 +35,32 @@ war {
   baseName = "petclinic"
 }
 
-task dropAndCreateDB << {
+task dropAndRecreateDB << {
   runSqlScript('dropDB.sql')
-  runSqlScript('initDB.sql')
+  tasks.initDB.execute()
 }
 
 task initDB << {
   runSqlScript('initDB.sql')
 }
 
-task populateDB(dependsOn: dropAndCreateDB) << {
+task populateDB(dependsOn: [dropAndRecreateDB]) << {
   runSqlScript('populateDB.sql', databaseName)
 }
 
-test.dependsOn populateDB
+task migrateDB(dependsOn: initDB) << {
+  ant.taskdef(name: 'dbdeploy', classname: 'com.dbdeploy.AntTarget', classpath: (configurations.dbdeploy + configurations.mysql).asPath)
+  ant.dbdeploy(driver: "com.mysql.jdbc.Driver", url: "jdbc:mysql://${config.db.host}/petclinic", userid: config.db.dba.username, password: config.db.dba.password, dir: "db")
+}
+
+task populateAndMigrateDB << {
+  tasks.populateDB.execute()
+  tasks.migrateDB.execute()
+}
+
+test {
+  dependsOn populateAndMigrateDB
+}
 
 def runSqlScript(filename, database = "") {
   ant.sql(
@@ -99,6 +110,8 @@ repositories {
 
 configurations {
   provided
+  mysql
+  dbdeploy
 }
 
 sourceSets {
@@ -171,5 +184,9 @@ dependencies {
 
   // Cargo
   cargo 'org.codehaus.cargo:cargo-core-uberjar:1.1.1', 'org.codehaus.cargo:cargo-ant:1.1.1', 'jaxen:jaxen:1.1.1'
+
+  mysql "com.mysql.jdbc:com.springsource.com.mysql.jdbc:5.1.6"
+  dbdeploy fileTree(dir: 'libs', include: '*.jar')
+
 }
 
