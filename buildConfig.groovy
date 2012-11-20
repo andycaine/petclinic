@@ -1,10 +1,14 @@
 
+def configScript = '''
 environments {
+
+  tomcat {
+    username = "${tomcatUsername}"
+    password = "password"
+  }
 
   local {
     tomcat {
-      username = "admin"
-      password = "admin"
       host = "localhost"
     }
 
@@ -73,4 +77,9 @@ environments {
     }
   }
 
-}
+}'''
+
+def environment = System.getProperty("environment") ?: "local"
+def config = new ConfigSlurper(environment).parse(configScript)
+if (config.isEmpty()) throw new InvalidUserDataException("Invalid environment: ${environment}")
+config.each { k, v -> ext.set(k, v) }

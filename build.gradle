@@ -1,26 +1,26 @@
-apply plugin: 'java'
-apply plugin: 'cargo'
+apply plugin: 'war'
 apply plugin: 'maven'
+apply plugin: 'idea'
 
+//apply from: 'buildConfig.groovy'
 
-def buildNumber = System.getProperty("build") ?: "SNAPSHOT"
+ext {
+  projectName = 'petclinic'
+  database = 'petclinic'
+  buildNumber = System.getProperty('build') ?: 'SNAPSHOT'
+  nexusHost = 'http://192.168.33.10:8081'
+  uploadRepository = System.getProperty("uploadRepository") ?: "staging"
+  downloadRepository = System.getProperty("downloadRepository") ?: "ci_builds"
+}
+
 version = "1.0.0-${buildNumber}"
 group = "org.springframework.samples"
 
-loadConfig()
 
-def loadConfig() {
-  def environment = System.getProperty("environment") ?: "local"
-  def config = new ConfigSlurper(environment).parse(new File("build-config.groovy").toURL())
-  if (config.isEmpty()) throw new InvalidUserDataException("Invalid environment: ${environment}")
-  ext.config = config
-}
-
-def repoId = System.getProperty("repository") ?: "staging"
 uploadArchives {
   repositories {
     mavenDeployer {
-      repository(url: "http://192.168.33.10:8081/nexus/content/repositories/${repoId}") {
+      repository(url: "${nexusHost}/nexus/content/repositories/${uploadRepository}") {
         authentication(userName: "admin", password: "admin123")
       }
     }
@@ -32,7 +32,7 @@ task wrapper(type: Wrapper) {
 }
 
 war {
-  baseName = "petclinic"
+  baseName = projectName
 }
 
 task dropAndRecreateDB << {
@@ -45,12 +45,18 @@ task initDB << {
 }
 
 task populateDB(dependsOn: [dropAndRecreateDB]) << {
-  runSqlScript('populateDB.sql', databaseName)
+  runSqlScript('populateDB.sql', database)
 }
 
 task migrateDB(dependsOn: initDB) << {
-  ant.taskdef(name: 'dbdeploy', classname: 'com.dbdeploy.AntTarget', classpath: (configurations.dbdeploy + configurations.mysql).asPath)
-  ant.dbdeploy(driver: "com.mysql.jdbc.Driver", url: "jdbc:mysql://${config.db.host}/petclinic", userid: config.db.dba.username, password: config.db.dba.password, dir: "db")
+  ant.taskdef(name: 'dbdeploy',
+              classname: 'com.dbdeploy.AntTarget',
+              classpath: (configurations.dbdeploy + configurations.mysql).asPath)
+  ant.dbdeploy(driver: "com.mysql.jdbc.Driver",
+               url: "jdbc:mysql://${databaseHost}/${database}",
+               userid: dbaUsername,
+               password: dbaPassword,
+               dir: "db")
 }
 
 task populateAndMigrateDB << {
@@ -64,41 +70,17 @@ test {
 
 def runSqlScript(filename, database = "") {
   ant.sql(
-    userid: "${config.db.dba.username}",
-    url: "jdbc:mysql://${config.db.host}/${database}",
-    password: "${config.db.dba.password}",
+    userid: "${dbaUsername}",
+    url: "jdbc:mysql://${databaseHost}/${database}",
+    password: "${dbaPassword}",
     driver: "com.mysql.jdbc.Driver",
-    classpath: configurations.runtime.asPath,
+    classpath: configurations.mysql.asPath,
     src: "src/main/resources/db/mysql/${filename}")
 }
 
-buildscript {
-  repositories {
-    add(new org.apache.ivy.plugins.resolver.URLResolver()) {
-      name = 'GitHub'
-      addArtifactPattern 'http://cloud.github.com/downloads/[organisation]/[module]/[module]-[revision].[ext]'
-    }
-  }
-  dependencies {
-    classpath 'bmuschko:gradle-cargo-plugin:0.3'
-  }
-}
+task deploy(dependsOn: migrateDB) << {
 
-cargo {
-  containerId = 'tomcat6x'
-  port = 8080
-  context = 'petclinic'
-  remote {
-    hostname = "${config.tomcat.host}"
-    username = "${config.tomcat.username}"
-    password = "${config.tomcat.password}"
-  }
 }
-
-task deploy(dependsOn: [populateDB]) << {
-  tasks.cargoRedeployRemote.execute()
-}
-
 
 repositories {
   mavenCentral()
@@ -112,12 +94,16 @@ configurations {
   provided
   mysql
   dbdeploy
+  antScpTask
 }
 
 sourceSets {
   main.compileClasspath += configurations.provided
   test.compileClasspath += configurations.provided
   test.runtimeClasspath += configurations.provided
+
+  test.runtimeClasspath += configurations.mysql
+  main.runtimeClasspath += configurations.mysql
 }
 
 
@@ -146,8 +132,7 @@ dependencies {
   runtime "org.apache.commons:com.springsource.org.apache.commons.dbcp:1.2.2.osgi"
   runtime "org.apache.commons:com.springsource.org.apache.commons.pool:1.5.3"
   runtime "org.hsqldb:com.springsource.org.hsqldb:1.8.0.9"
-  runtime "com.mysql.jdbc:com.springsource.com.mysql.jdbc:5.1.6"
-  
+
   // Hibernate
   compile "org.hibernate:com.springsource.org.hibernate:3.3.2.GA"
 
@@ -182,11 +167,11 @@ dependencies {
   testCompile "org.springframework:org.springframework.test:${springVersion}"
   testCompile "javax.transaction:com.springsource.javax.transaction:1.1.0"
 
-  // Cargo
-  cargo 'org.codehaus.cargo:cargo-core-uberjar:1.1.1', 'org.codehaus.cargo:cargo-ant:1.1.1', 'jaxen:jaxen:1.1.1'
-
+  // Mysql
   mysql "com.mysql.jdbc:com.springsource.com.mysql.jdbc:5.1.6"
-  dbdeploy fileTree(dir: 'libs', include: '*.jar')
+
+  // DB Deploy
+  dbdeploy fileTree(dir: 'libs', include: 'dbdeploy-*.jar')
 
 }
 
