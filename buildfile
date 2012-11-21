@@ -98,38 +98,17 @@ MYSQL_DRIVER = 'com.mysql.jdbc.Driver'
 
 desc 'Drop the database'
 task 'db:drop' do
-  ant('db:drop') do |ant|
-    ant.sql :userid => db_username,
-            :url => "jdbc:mysql://#{db_host}",
-            :password => db_password,
-            :driver => MYSQL_DRIVER,
-            :classpath => MYSQL,
-            :src => 'src/main/resources/db/mysql/dropDB.sql'
-  end
+  sql :sql => 'drop database petclinic'
 end
 
 desc 'Recreate and populate the database with test data'
 task 'db:populate' => ['db:drop', 'db:init'] do
-  ant('db:populate') do |ant|
-    ant.sql :userid => db_username,
-            :url => "jdbc:mysql://#{db_host}/petclinic",
-            :password => db_password,
-            :driver => MYSQL_DRIVER,
-            :classpath => MYSQL,
-            :src => 'src/main/resources/db/mysql/populateDB.sql'
-  end
+  sql :src => 'src/main/resources/db/mysql/populateDB.sql', :db => 'petclinic'
 end
 
 desc 'Initialise the database'
 task 'db:init' => :artifacts do
-  ant('initdb') do |ant|
-    ant.sql :userid => db_username,
-            :url => "jdbc:mysql://#{db_host}",
-            :password => db_password,
-            :driver => MYSQL_DRIVER,
-            :classpath => MYSQL,
-            :src => 'src/main/resources/db/mysql/initDB.sql'
-  end
+  sql :src => 'src/main/resources/db/mysql/initDB.sql'
 end
 
 directory 'db'
@@ -145,6 +124,26 @@ task 'db:migrate' => ['db', 'db:init'] do
                  :userid => db_username,
                  :password => db_password,
                  :dir => 'db'
+  end
+end
+
+def sql(opts = {})
+  ant('sql') do |ant|
+    ant_sql_opts = {
+        :userid => db_username,
+        :url => "jdbc:mysql://#{db_host}/#{opts[:db]}",
+        :password => db_password,
+        :driver => MYSQL_DRIVER,
+        :classpath => MYSQL
+    }
+    if opts[:src]
+      ant_sql_opts[:src] = opts[:src]
+      ant.sql ant_sql_opts
+    else
+      ant.sql(ant_sql_opts) { |ant|
+        ant.transaction(:pcdata => opts[:sql])
+      }
+    end
   end
 end
 
