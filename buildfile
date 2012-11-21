@@ -12,7 +12,7 @@ repositories.remote << 'http://repository.springsource.com/maven/bundles/milesto
 repositories.remote << 'http://repository.springsource.com/maven/bundles/snapshot'
 
 
-SPRING = ['context', 'orm', 'oxm', 'web.servlet', 'aspects'].map do |m| 
+SPRING = %w(context orm oxm web.servlet aspects).map do |m|
   transitive("org.springframework:org.springframework.#{m}:jar:3.0.0.RELEASE")
 end
 
@@ -59,7 +59,7 @@ define 'petclinic' do
   package(:war, :id => 'petclinic').libs += artifacts(JAVAX_TRX, SLF4J_CL, SLF4J_LOG4J, DBCP, MYSQL, OPENJPA, HIBERNATE, HIBERNATE_EJB, HIBERNATE_ANNOTATIONS)
   package(:war).libs -= SERVLET
 
-  task 'tomcat_deploy' => :package do
+  task :tomcat_deploy => :package do
     ant('tomcat') do |ant|
       ant.taskdef :resource => 'cargo.tasks', :classpath => CARGO.join(':')
 
@@ -77,7 +77,8 @@ define 'petclinic' do
     end
   end
 
-  task 'dbmigrate' => :artifacts do
+  directory 'db'
+  task :dbmigrate => [:artifacts, 'db'] do
     ant('dbmigrate') do |ant|
       ant.taskdef :name => 'dbdeploy', :classname => 'com.dbdeploy.AntTarget', :classpath => artifacts(DBDEPLOY, MYSQL).join(':')
       ant.dbdeploy :driver => "com.mysql.jdbc.Driver", :url => "jdbc:mysql://localhost/petclinic", :userid => 'acaine', :password => 'password', :dir => 'db'
