@@ -42,48 +42,50 @@ def test_deps
              'org.springframework:org.springframework.test:jar:3.0.0.RELEASE')
 end
 
-
-ASPECTJ = transitive('org.aspectj:com.springsource.org.aspectj.weaver:jar:1.6.8.RELEASE')
-SLF4J_API = transitive('org.slf4j:com.springsource.slf4j.api:jar:1.5.6')
-HIBERNATE = transitive('org.hibernate:com.springsource.org.hibernate:jar:3.3.2.GA')
-JAVAX_PERSISTENCE = transitive('javax.persistence:com.springsource.javax.persistence:jar:1.0.0')
-TOPLINK = transitive('com.oracle.toplink.essentials:com.springsource.oracle.toplink.essentials:jar:2.0.0.b41-beta2')
-HIBERNATE_EJB = transitive('org.hibernate:com.springsource.org.hibernate.ejb:jar:3.4.0.GA')
+SPRING = transitive(%w(context orm oxm web.servlet aspects).map { |m| "org.springframework:org.springframework.#{m}:jar:3.0.0.RELEASE" })
+ASPECTJ = artifacts('org.aspectj:com.springsource.org.aspectj.weaver:jar:1.6.8.RELEASE')
+SLF4J_API = artifacts('org.slf4j:com.springsource.slf4j.api:jar:1.5.6')
+HIBERNATE = artifacts('org.hibernate:com.springsource.org.hibernate:jar:3.3.2.GA')
+JAVAX_PERSISTENCE = artifacts('javax.persistence:com.springsource.javax.persistence:jar:1.0.0')
+TOPLINK = artifacts('com.oracle.toplink.essentials:com.springsource.oracle.toplink.essentials:jar:2.0.0.b41-beta2')
+HIBERNATE_EJB = artifacts('org.hibernate:com.springsource.org.hibernate.ejb:jar:3.4.0.GA')
 HIBERNATE_ANNOTATIONS = transitive('org.hibernate:com.springsource.org.hibernate.annotations:jar:3.4.0.GA')
 OPENJPA = transitive('org.apache.openjpa:com.springsource.org.apache.openjpa:jar:1.1.0')
-JSTL = transitive('javax.servlet:com.springsource.javax.servlet.jsp.jstl:jar:1.2.0')
-TAGLIBS = transitive('org.apache.taglibs:com.springsource.org.apache.taglibs.standard:jar:1.1.2')
-SYNDICATION = transitive('com.sun.syndication:com.springsource.com.sun.syndication:jar:1.0.0')
+JSTL = artifact('javax.servlet:com.springsource.javax.servlet.jsp.jstl:jar:1.2.0')
+TAGLIBS = artifact('org.apache.taglibs:com.springsource.org.apache.taglibs.standard:jar:1.1.2')
+SYNDICATION = artifact('com.sun.syndication:com.springsource.com.sun.syndication:jar:1.0.0')
 
 
-SLF4J_CL = transitive('org.slf4j:com.springsource.slf4j.org.apache.commons.logging:jar:1.5.6') # runtime
-SLF4J_LOG4J = transitive('org.slf4j:com.springsource.slf4j.log4j:jar:1.5.6') # runtime
-LOG4J = transitive('org.apache.log4j:com.springsource.org.apache.log4j:jar:1.2.15') # runtime
-DBCP = transitive('org.apache.commons:com.springsource.org.apache.commons.dbcp:jar:1.2.2.osgi') # runtime
-COMMONS_POOL = transitive('org.apache.commons:com.springsource.org.apache.commons.pool:jar:1.5.3') # runtime
-HSQLDB = transitive('org.hsqldb:com.springsource.org.hsqldb:jar:1.8.0.9') # runtime
-JAVAX_TRX = 'javax.transaction:com.springsource.javax.transaction:jar:1.1.0'
+SLF4J_CL = artifact('org.slf4j:com.springsource.slf4j.org.apache.commons.logging:jar:1.5.6') # runtime
+SLF4J_LOG4J = artifact('org.slf4j:com.springsource.slf4j.log4j:jar:1.5.6') # runtime
+LOG4J = artifact('org.apache.log4j:com.springsource.org.apache.log4j:jar:1.2.15') # runtime
+DBCP = artifact('org.apache.commons:com.springsource.org.apache.commons.dbcp:jar:1.2.2.osgi') # runtime
+COMMONS_POOL = artifact('org.apache.commons:com.springsource.org.apache.commons.pool:jar:1.5.3') # runtime
+HSQLDB = artifact('org.hsqldb:com.springsource.org.hsqldb:jar:1.8.0.9') # runtime
+JAVAX_TRX = artifact('javax.transaction:com.springsource.javax.transaction:jar:1.1.0')
 MYSQL = artifact('com.mysql.jdbc:com.springsource.com.mysql.jdbc:jar:5.1.6')
-JDOM = transitive('org.jdom:com.springsource.org.jdom:jar:1.1.0') # runtime
+JDOM = artifact('org.jdom:com.springsource.org.jdom:jar:1.1.0') # runtime
 
-
-SERVLET = transitive('javax.servlet:com.springsource.javax.servlet:jar:2.5.0') # provided
-SERVLET_JSP = transitive('javax.servlet:com.springsource.javax.servlet.jsp:jar:2.1.0') # provided
-
+SERVLET = artifact('javax.servlet:com.springsource.javax.servlet:jar:2.5.0') # provided
+SERVLET_JSP = artifact('javax.servlet:com.springsource.javax.servlet.jsp:jar:2.1.0') # provided
 
 # Testing deps
-JUNIT = 'org.junit:com.springsource.org.junit:jar:4.7.0'
-SPRING_TEST = transitive('org.springframework:org.springframework.test:jar:3.0.0.RELEASE')
+JUNIT = artifact('org.junit:com.springsource.org.junit:jar:4.7.0')
+SPRING_TEST = artifact('org.springframework:org.springframework.test:jar:3.0.0.RELEASE')
 
+COMPILE_DEPS = [SPRING, ASPECTJ, SLF4J_API, HIBERNATE, JAVAX_PERSISTENCE, TOPLINK, HIBERNATE_EJB, HIBERNATE_ANNOTATIONS, OPENJPA, JSTL, TAGLIBS, SYNDICATION]
+RUNTIME_DEPS = [SLF4J_CL, SLF4J_LOG4J, LOG4J, DBCP, COMMONS_POOL, HSQLDB, JAVAX_TRX, MYSQL, JDOM]
+PROVIDED_DEPS = [SERVLET,SERVLET_JSP]
+TEST_DEPS = [JUNIT, SPRING_TEST]
 
 desc 'Petclinic'
 define 'petclinic' do
   project.group = 'org.springframework.samples'
   project.version = '1.0.0-SNAPSHOT'
-  compile.with compile_deps + provided_deps
-  test.with test_deps + runtime_deps
-  package(:war, :id => 'petclinic').libs += runtime_deps
-  package(:war).libs -= provided_deps
+  compile.with COMPILE_DEPS + PROVIDED_DEPS
+  test.with TEST_DEPS + RUNTIME_DEPS
+  package(:war, :id => 'petclinic').libs += RUNTIME_DEPS
+  package(:war).libs -= PROVIDED_DEPS
 end
 
 namespace :tomcat do
