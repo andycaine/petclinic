@@ -140,7 +140,7 @@ def sql(opts = {})
       ant_sql_opts[:src] = opts[:src]
       ant.sql ant_sql_opts
     else
-      ant.sql(ant_sql_opts) { |ant|
+      ant.sql(ant_sql_opts) {
         ant.transaction(:pcdata => opts[:sql])
       }
     end
