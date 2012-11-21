@@ -38,7 +38,7 @@ TAGLIBS = transitive('org.apache.taglibs:com.springsource.org.apache.taglibs.sta
 SYNDICATION = transitive('com.sun.syndication:com.springsource.com.sun.syndication:jar:1.0.0')
 JDOM = transitive('org.jdom:com.springsource.org.jdom:jar:1.1.0') # runtime
 JAXB = transitive('javax.xml.bind:com.springsource.javax.xml.bind:jar:2.1.7') # provided
-MYSQL = 'com.mysql.jdbc:com.springsource.com.mysql.jdbc:jar:5.1.6'
+MYSQL = artifact('com.mysql.jdbc:com.springsource.com.mysql.jdbc:jar:5.1.6')
 # Testing deps
 JUNIT = 'org.junit:com.springsource.org.junit:jar:4.7.0'
 SPRING_TEST = transitive('org.springframework:org.springframework.test:jar:3.0.0.RELEASE')
@@ -77,11 +77,48 @@ define 'petclinic' do
     end
   end
 
+  def db_settings
+    Buildr.settings.user['database']
+  end
+
+  def db_username
+    db_settings['username']
+  end
+
+  def db_password
+    db_settings['password']
+  end
+
+  def db_host
+    db_settings['host']
+  end
+
+  MYSQL_DRIVER = 'com.mysql.jdbc.Driver'
+
+  task :init_db => :artifacts do
+    puts db_username
+    ant('initdb') do |ant|
+      ant.sql :userid => db_username,
+              :url => "jdbc:mysql://#{db_host}/petclinic",
+              :password => db_password,
+              :driver => MYSQL_DRIVER,
+              :classpath => MYSQL,
+              :src => 'src/main/resources/db/mysql/initDB.sql'
+    end
+  end
+
   directory 'db'
-  task :dbmigrate => [:artifacts, 'db'] do
+  task :dbmigrate => ['db', :init_db] do
     ant('dbmigrate') do |ant|
-      ant.taskdef :name => 'dbdeploy', :classname => 'com.dbdeploy.AntTarget', :classpath => artifacts(DBDEPLOY, MYSQL).join(':')
-      ant.dbdeploy :driver => "com.mysql.jdbc.Driver", :url => "jdbc:mysql://localhost/petclinic", :userid => 'acaine', :password => 'password', :dir => 'db'
+      ant.taskdef :name => 'dbdeploy',
+                  :classname => 'com.dbdeploy.AntTarget',
+                  :classpath => artifacts(DBDEPLOY, MYSQL).join(':')
+
+      ant.dbdeploy :driver => MYSQL_DRIVER,
+                   :url => "jdbc:mysql://#{db_host}/petclinic",
+                   :userid => db_username,
+                   :password => db_password,
+                   :dir => 'db'
     end
   end
 
