@@ -1,5 +1,3 @@
-
-
 # Maven Central
 repositories.remote << 'http://repo1.maven.org/maven2'
 # SpringSource Enterprise Bundle Repository - SpringSource Releases
@@ -50,7 +48,7 @@ CARGO = transitive(group('cargo-core-uberjar', 'cargo-ant', :under => 'org.codeh
 #CARGO_ANT = artifact('org.codehaus.cargo:cargo-ant:jar:1.2.4')
 #CARGO_UBER = artifact('org.codehaus.cargo:cargo-core-uberjar:jar:1.2.4')
 
-desc 'petclinic'
+desc 'Petclinic'
 define 'petclinic' do
   project.group = 'org.springframework.samples'
   project.version = '1.0.0-SNAPSHOT'
@@ -59,95 +57,90 @@ define 'petclinic' do
   package(:war, :id => 'petclinic').libs += artifacts(JAVAX_TRX, SLF4J_CL, SLF4J_LOG4J, DBCP, MYSQL, OPENJPA, HIBERNATE, HIBERNATE_EJB, HIBERNATE_ANNOTATIONS)
   package(:war).libs -= SERVLET
 
-  task :tomcat_deploy => :package do
-    ant('tomcat') do |ant|
-      ant.taskdef :resource => 'cargo.tasks', :classpath => CARGO.join(':')
-
-      ant.cargo(:containerId => 'tomcat6x', :action => 'redeploy', :type => 'remote') { |ant|
-        ant.configuration(:type => 'runtime') { |ant|
-          ant.property :name => 'cargo.hostname', :value => 'localhost'
-          ant.property :name => 'cargo.servlet.port', :value => '8080'
-          ant.property :name => 'cargo.remote.username', :value => 'admin'          
-          ant.property :name => 'cargo.remote.password', :value => 'admin'
-          ant.deployable(:type => 'war', :file => packages.first) { |ant|
-            ant.property :name => 'context', :value => 'petclinic'
-          }
-        }
-      }
-    end
-  end
-
-  def db_settings
-    Buildr.settings.user['database']
-  end
-
-  def db_username
-    db_settings['username']
-  end
-
-  def db_password
-    db_settings['password']
-  end
-
-  def db_host
-    db_settings['host']
-  end
-
-  MYSQL_DRIVER = 'com.mysql.jdbc.Driver'
-
-  task :drop_db do
-    ant('dropdb') do |ant|
-      ant.sql :userid => db_username,
-              :url => "jdbc:mysql://#{db_host}",
-              :password => db_password,
-              :driver => MYSQL_DRIVER,
-              :classpath => MYSQL,
-              :src => 'src/main/resources/db/mysql/dropDB.sql'
-    end
-  end
-
-  task :populate_db => [:drop_db, :init_db] do
-    ant('initdb') do |ant|
-      ant.sql :userid => db_username,
-              :url => "jdbc:mysql://#{db_host}/petclinic",
-              :password => db_password,
-              :driver => MYSQL_DRIVER,
-              :classpath => MYSQL,
-              :src => 'src/main/resources/db/mysql/populateDB.sql'
-    end
-  end
-
-  task :init_db => :artifacts do
-    ant('initdb') do |ant|
-      ant.sql :userid => db_username,
-              :url => "jdbc:mysql://#{db_host}",
-              :password => db_password,
-              :driver => MYSQL_DRIVER,
-              :classpath => MYSQL,
-              :src => 'src/main/resources/db/mysql/initDB.sql'
-    end
-  end
-
-  directory 'db'
-  task :migrate_db => ['db', :init_db] do
-    ant('dbmigrate') do |ant|
-      ant.taskdef :name => 'dbdeploy',
-                  :classname => 'com.dbdeploy.AntTarget',
-                  :classpath => artifacts(DBDEPLOY, MYSQL).join(':')
-
-      ant.dbdeploy :driver => MYSQL_DRIVER,
-                   :url => "jdbc:mysql://#{db_host}/petclinic",
-                   :userid => db_username,
-                   :password => db_password,
-                   :dir => 'db'
-    end
-  end
-
-  task :test => [:populate_db, :migrate_db]
-
 end
 
-#task 'tomcat_deploy' => :package do
-#  puts project('petclinic').packages
-#  puts 'hi'
-#end
+task :tomcat_deploy => :package do
+  ant('tomcat') do |ant|
+    ant.taskdef :resource => 'cargo.tasks', :classpath => CARGO.join(':')
+
+    ant.cargo(:containerId => 'tomcat6x', :action => 'redeploy', :type => 'remote') { |ant|
+      ant.configuration(:type => 'runtime') { |ant|
+        ant.property :name => 'cargo.hostname', :value => 'localhost'
+        ant.property :name => 'cargo.servlet.port', :value => '8080'
+        ant.property :name => 'cargo.remote.username', :value => 'admin'
+        ant.property :name => 'cargo.remote.password', :value => 'admin'
+        ant.deployable(:type => 'war', :file => packages.first) { |ant|
+          ant.property :name => 'context', :value => 'petclinic'
+        }
+      }
+    }
+  end
+end
+
+def db_settings
+  Buildr.settings.user['database']
+end
+
+def db_username
+  db_settings['username']
+end
+
+def db_password
+  db_settings['password']
+end
+
+def db_host
+  db_settings['host']
+end
+
+MYSQL_DRIVER = 'com.mysql.jdbc.Driver'
+
+task :drop_db do
+  ant('dropdb') do |ant|
+    ant.sql :userid => db_username,
+            :url => "jdbc:mysql://#{db_host}",
+            :password => db_password,
+            :driver => MYSQL_DRIVER,
+            :classpath => MYSQL,
+            :src => 'src/main/resources/db/mysql/dropDB.sql'
+  end
+end
+
+task :populate_db => [:drop_db, :init_db] do
+  ant('initdb') do |ant|
+    ant.sql :userid => db_username,
+            :url => "jdbc:mysql://#{db_host}/petclinic",
+            :password => db_password,
+            :driver => MYSQL_DRIVER,
+            :classpath => MYSQL,
+            :src => 'src/main/resources/db/mysql/populateDB.sql'
+  end
+end
+
+task :init_db => :artifacts do
+  ant('initdb') do |ant|
+    ant.sql :userid => db_username,
+            :url => "jdbc:mysql://#{db_host}",
+            :password => db_password,
+            :driver => MYSQL_DRIVER,
+            :classpath => MYSQL,
+            :src => 'src/main/resources/db/mysql/initDB.sql'
+  end
+end
+
+directory 'db'
+task :migrate_db => ['db', :init_db] do
+  ant('dbmigrate') do |ant|
+    ant.taskdef :name => 'dbdeploy',
+                :classname => 'com.dbdeploy.AntTarget',
+                :classpath => artifacts(DBDEPLOY, MYSQL).join(':')
+
+    ant.dbdeploy :driver => MYSQL_DRIVER,
+                 :url => "jdbc:mysql://#{db_host}/petclinic",
+                 :userid => db_username,
+                 :password => db_password,
+                 :dir => 'db'
+  end
+end
+
+task :test => [:populate_db, :migrate_db]
