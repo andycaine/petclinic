@@ -70,7 +70,7 @@ task 'tomcat:deploy' => :package do
         ant.property :name => 'cargo.servlet.port', :value => '8080'
         ant.property :name => 'cargo.remote.username', :value => 'admin'
         ant.property :name => 'cargo.remote.password', :value => 'admin'
-        ant.deployable(:type => 'war', :file => packages.first) { |ant|
+        ant.deployable(:type => 'war', :file => project(:petclinic).packages.first) { |ant|
           ant.property :name => 'context', :value => 'petclinic'
         }
       }
