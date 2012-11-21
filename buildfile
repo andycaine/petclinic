@@ -59,7 +59,8 @@ define 'petclinic' do
 
 end
 
-task :tomcat_deploy => :package do
+desc 'Deploy the app to Tomcat'
+task 'tomcat:deploy' => :package do
   ant('tomcat') do |ant|
     ant.taskdef :resource => 'cargo.tasks', :classpath => CARGO.join(':')
 
@@ -95,8 +96,9 @@ end
 
 MYSQL_DRIVER = 'com.mysql.jdbc.Driver'
 
-task :drop_db do
-  ant('dropdb') do |ant|
+desc 'Drop the database'
+task 'db:drop' do
+  ant('db:drop') do |ant|
     ant.sql :userid => db_username,
             :url => "jdbc:mysql://#{db_host}",
             :password => db_password,
@@ -106,8 +108,9 @@ task :drop_db do
   end
 end
 
-task :populate_db => [:drop_db, :init_db] do
-  ant('initdb') do |ant|
+desc 'Recreate and populate the database with test data'
+task 'db:populate' => ['db:drop', 'db:init'] do
+  ant('db:populate') do |ant|
     ant.sql :userid => db_username,
             :url => "jdbc:mysql://#{db_host}/petclinic",
             :password => db_password,
@@ -117,7 +120,8 @@ task :populate_db => [:drop_db, :init_db] do
   end
 end
 
-task :init_db => :artifacts do
+desc 'Initialise the database'
+task 'db:init' => :artifacts do
   ant('initdb') do |ant|
     ant.sql :userid => db_username,
             :url => "jdbc:mysql://#{db_host}",
@@ -129,7 +133,8 @@ task :init_db => :artifacts do
 end
 
 directory 'db'
-task :migrate_db => ['db', :init_db] do
+desc 'Migrate the database to the latest version'
+task 'db:migrate' => ['db', 'db:init'] do
   ant('dbmigrate') do |ant|
     ant.taskdef :name => 'dbdeploy',
                 :classname => 'com.dbdeploy.AntTarget',
@@ -143,4 +148,4 @@ task :migrate_db => ['db', :init_db] do
   end
 end
 
-task :test => [:populate_db, :migrate_db]
+task :test => ['db:populate', 'db:migrate']
