@@ -95,11 +95,32 @@ define 'petclinic' do
 
   MYSQL_DRIVER = 'com.mysql.jdbc.Driver'
 
-  task :init_db => :artifacts do
-    puts db_username
+  task :drop_db do
+    ant('dropdb') do |ant|
+      ant.sql :userid => db_username,
+              :url => "jdbc:mysql://#{db_host}",
+              :password => db_password,
+              :driver => MYSQL_DRIVER,
+              :classpath => MYSQL,
+              :src => 'src/main/resources/db/mysql/dropDB.sql'
+    end
+  end
+
+  task :populate_db => [:drop_db, :init_db] do
     ant('initdb') do |ant|
       ant.sql :userid => db_username,
               :url => "jdbc:mysql://#{db_host}/petclinic",
+              :password => db_password,
+              :driver => MYSQL_DRIVER,
+              :classpath => MYSQL,
+              :src => 'src/main/resources/db/mysql/populateDB.sql'
+    end
+  end
+
+  task :init_db => :artifacts do
+    ant('initdb') do |ant|
+      ant.sql :userid => db_username,
+              :url => "jdbc:mysql://#{db_host}",
               :password => db_password,
               :driver => MYSQL_DRIVER,
               :classpath => MYSQL,
@@ -108,7 +129,7 @@ define 'petclinic' do
   end
 
   directory 'db'
-  task :dbmigrate => ['db', :init_db] do
+  task :migrate_db => ['db', :init_db] do
     ant('dbmigrate') do |ant|
       ant.taskdef :name => 'dbdeploy',
                   :classname => 'com.dbdeploy.AntTarget',
@@ -121,6 +142,8 @@ define 'petclinic' do
                    :dir => 'db'
     end
   end
+
+  task :test => [:populate_db, :migrate_db]
 
 end
 
