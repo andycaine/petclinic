@@ -1,5 +1,6 @@
 namespace :db do
   DBDEPLOY = group('dbdeploy-core', 'dbdeploy-ant', :under => 'com.dbdeploy', :version => '3.0M3')
+  MYSQL = artifact('com.mysql.jdbc:com.springsource.com.mysql.jdbc:jar:5.1.6')
   MYSQL_DRIVER = 'com.mysql.jdbc.Driver'
 
   def db_settings
@@ -19,7 +20,7 @@ namespace :db do
   end
 
   desc 'Drop the database'
-  task :drop do
+  task :drop => MYSQL do
     sql :sql => 'drop database if exists petclinic'
   end
 
@@ -29,13 +30,13 @@ namespace :db do
   end
   
   desc 'Initialise the database'
-  task :init => :artifacts do
+  task :init => MYSQL do
     sql :src => 'src/main/resources/db/mysql/initDB.sql'
   end
 
   directory 'db'
   desc 'Migrate the database to the latest version'
-  task :migrate => ['db', :init] do
+  task :migrate => ['db', :init, DBDEPLOY] do
     ant('dbmigrate') do |ant|
       ant.taskdef :name => 'dbdeploy',
       :classname => 'com.dbdeploy.AntTarget',
