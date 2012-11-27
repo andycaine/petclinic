@@ -1,5 +1,6 @@
 namespace :db do
-  DBDEPLOY = group('dbdeploy-core', 'dbdeploy-ant', :under => 'com.dbdeploy', :version => '3.0M3')
+  DBDEPLOY_ANT = artifact('com.dbdeploy:dbdeploy-ant:jar:3.0M3')
+  DBDEPLOY_CORE = artifact('com.dbdeploy:dbdeploy-core:jar:3.0M3')
   MYSQL = artifact('com.mysql.jdbc:com.springsource.com.mysql.jdbc:jar:5.1.6')
   MYSQL_DRIVER = 'com.mysql.jdbc.Driver'
 
@@ -36,11 +37,11 @@ namespace :db do
 
   directory 'db'
   desc 'Migrate the database to the latest version'
-  task :migrate => ['db', :init, DBDEPLOY] do
+  task :migrate => ['db', :init, DBDEPLOY_ANT, DBDEPLOY_CORE] do
     ant('dbmigrate') do |ant|
       ant.taskdef :name => 'dbdeploy',
       :classname => 'com.dbdeploy.AntTarget',
-      :classpath => artifacts(DBDEPLOY, MYSQL).join(':')
+      :classpath => artifacts(DBDEPLOY_ANT, DBDEPLOY_CORE, MYSQL).join(':')
       
       ant.dbdeploy :driver => MYSQL_DRIVER,
       :url => "jdbc:mysql://#{db_host}/petclinic",

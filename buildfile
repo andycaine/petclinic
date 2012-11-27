@@ -6,6 +6,8 @@ end
 
 repositories.remote << spring_repos(['release', 'external', 'milestone', 'snapshot'])
 
+SPRING_VERSION = '3.0.0.RELEASE'
+SLF4J_VERSION = '1.5.6'
 COMPILE_DEPS = artifacts('com.oracle.toplink.essentials:com.springsource.oracle.toplink.essentials:jar:2.0.0.b41-beta2',
                          'com.sun.syndication:com.springsource.com.sun.syndication:jar:1.0.0',
                          'edu.oswego.cs.concurrent:com.springsource.edu.oswego.cs.dl.util.concurrent:jar:1.3.4',
@@ -28,25 +30,25 @@ COMPILE_DEPS = artifacts('com.oracle.toplink.essentials:com.springsource.oracle.
                          'org.jboss.javassist:com.springsource.javassist:jar:3.9.0.GA',
                          'org.jboss.util:com.springsource.org.jboss.util:jar:2.0.4.GA',
                          'org.objectweb.asm:com.springsource.org.objectweb.asm:jar:1.5.3',
-                         'org.slf4j:com.springsource.slf4j.api:jar:1.5.6',
-                         'org.springframework:org.springframework.aop:jar:3.0.0.RELEASE',
-                         'org.springframework:org.springframework.asm:jar:3.0.0.RELEASE',
-                         'org.springframework:org.springframework.aspects:jar:3.0.0.RELEASE',
-                         'org.springframework:org.springframework.beans:jar:3.0.0.RELEASE',
-                         'org.springframework:org.springframework.context:jar:3.0.0.RELEASE',
-                         'org.springframework:org.springframework.core:jar:3.0.0.RELEASE',
-                         'org.springframework:org.springframework.expression:jar:3.0.0.RELEASE',
-                         'org.springframework:org.springframework.jdbc:jar:3.0.0.RELEASE',
-                         'org.springframework:org.springframework.orm:jar:3.0.0.RELEASE',
-                         'org.springframework:org.springframework.oxm:jar:3.0.0.RELEASE',
-                         'org.springframework:org.springframework.transaction:jar:3.0.0.RELEASE',
-                         'org.springframework:org.springframework.web:jar:3.0.0.RELEASE',
-                         'org.springframework:org.springframework.web.servlet:jar:3.0.0.RELEASE')
+                         "org.slf4j:com.springsource.slf4j.api:jar:#{SLF4J_VERSION}",
+                         "org.springframework:org.springframework.aop:jar:#{SPRING_VERSION}",
+                         "org.springframework:org.springframework.asm:jar:#{SPRING_VERSION}",
+                         "org.springframework:org.springframework.aspects:jar:#{SPRING_VERSION}",
+                         "org.springframework:org.springframework.beans:jar:#{SPRING_VERSION}",
+                         "org.springframework:org.springframework.context:jar:#{SPRING_VERSION}",
+                         "org.springframework:org.springframework.core:jar:#{SPRING_VERSION}",
+                         "org.springframework:org.springframework.expression:jar:#{SPRING_VERSION}",
+                         "org.springframework:org.springframework.jdbc:jar:#{SPRING_VERSION}",
+                         "org.springframework:org.springframework.orm:jar:#{SPRING_VERSION}",
+                         "org.springframework:org.springframework.oxm:jar:#{SPRING_VERSION}",
+                         "org.springframework:org.springframework.transaction:jar:#{SPRING_VERSION}",
+                         "org.springframework:org.springframework.web:jar:#{SPRING_VERSION}",
+                         "org.springframework:org.springframework.web.servlet:jar:#{SPRING_VERSION}")
 
 RUNTIME_DEPS = artifacts('org.hsqldb:com.springsource.org.hsqldb:jar:1.8.0.9',
                          'org.jdom:com.springsource.org.jdom:jar:1.1.0',
-                         'org.slf4j:com.springsource.slf4j.log4j:jar:1.5.6',
-                         'org.slf4j:com.springsource.slf4j.org.apache.commons.logging:jar:1.5.6',
+                         "org.slf4j:com.springsource.slf4j.log4j:jar:#{SLF4J_VERSION}",
+                         "org.slf4j:com.springsource.slf4j.org.apache.commons.logging:jar:#{SLF4J_VERSION}",
                          'org.apache.log4j:com.springsource.org.apache.log4j:jar:1.2.15',
                          'org.apache.commons:com.springsource.org.apache.commons.pool:jar:1.5.3',
                          'org.apache.commons:com.springsource.org.apache.commons.dbcp:jar:1.2.2.osgi',
@@ -54,7 +56,7 @@ RUNTIME_DEPS = artifacts('org.hsqldb:com.springsource.org.hsqldb:jar:1.8.0.9',
 
 TEST_DEPS = artifacts('javax.transaction:com.springsource.javax.transaction:jar:1.1.0',
                       'org.junit:com.springsource.org.junit:jar:4.7.0',
-                      'org.springframework:org.springframework.test:jar:3.0.0.RELEASE')
+                      "org.springframework:org.springframework.test:jar:#{SPRING_VERSION}")
 
 PROVIDED_DEPS = artifacts('javax.servlet:com.springsource.javax.servlet:jar:2.5.0',
                           'javax.servlet:com.springsource.javax.servlet.jsp:jar:2.1.0',
@@ -74,7 +76,7 @@ end
 namespace :tomcat do
   CARGO = transitive(group('cargo-core-uberjar', 'cargo-ant', :under => 'org.codehaus.cargo', :version => '1.2.4'))
   desc 'Deploy the app to Tomcat'
-  task :deploy => [:package, CARGO] do
+  task :deploy => :package do
     ant('tomcat') do |ant|
       ant.taskdef :resource => 'cargo.tasks', :classpath => CARGO.join(':')
 
